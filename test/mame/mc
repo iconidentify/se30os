@@ -1,0 +1,11 @@
+#!/bin/sh
+# usage: mc 'cmd1' 'cmd2' ...   (waits up to $MC_TIMEOUT seconds)
+W=$(dirname "$0")
+printf '%s\n' "$@" > "$W/ctl/cmd.tmp" && mv "$W/ctl/cmd.tmp" "$W/ctl/cmd"
+sleep 1
+n=0
+while [ $n -lt ${MC_TIMEOUT:-300} ]; do
+    [ ! -e "$W/ctl/cmd" ] && grep -q '^idle' "$W/ctl/status" 2>/dev/null && { cat "$W/ctl/status"; exit 0; }
+    sleep 1; n=$((n + 1))
+done
+echo "timeout: $(cat "$W/ctl/status")"; exit 1

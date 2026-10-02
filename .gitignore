@@ -1,0 +1,6 @@
+build/
+test/out/
+test/mac-base.img.zst
+test/mame/pmmu/se30
+mame-work/
+test/mame/roms/

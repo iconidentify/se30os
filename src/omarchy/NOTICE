@@ -1,0 +1,46 @@
+The decrypt, thunderstorm, matrix, spotlights, laseretch, vhstape, fireworks,
+bouncyballs, expand, and beams effects are adapted from TerminalTextEffects
+by ChrisBuilds,
+via omacom/ttfx. Both upstream projects are MIT licensed; their notices are in LICENSE.
+
+Reference: omacom/ttfx commit 921bd551c308c235e01c5867f0199efe0691c271,
+src/effects/{decrypt,thunderstorm,matrix,spotlights,laseretch,vhstape,fireworks,bouncyballs,expand,beams}.rs
+(https://github.com/omacom/ttfx).
+Original: https://github.com/ChrisBuilds/terminaltexteffects.
+
+This is a new, hand-written 68k implementation for the monochrome SE/30.
+It preserves the typing, fast cipher, slow cipher, and discovery sequence.
+ASCII replaces Unicode cipher/block glyphs. Monochrome replaces gradients.
+Typing uses four characters per step, fast cipher uses 24 two-tick symbols,
+and slow cipher uses one to six symbols. Its PRNG is xorshift32. It does
+not claim frame or RNG parity with the original effect or the ttfx engines.
+
+banner.txt/banner.h adapt the installed Omarchy screensaver branding from
+omacom/omarchy (https://github.com/omacom/omarchy), MIT licensed.
+Its copyright and license are preserved in BRANDING-LICENSE.
+
+Thunderstorm replaces color gradients with spatial dithering, uses a fixed
+32-drop rain pool, one 26-cell strike, a 12-cell branch, and eight impact
+sparks. The storm lasts 240 animation steps. Its paths and timings are
+adapted to a fixed 81x26 monochrome canvas, without upstream frame parity.
+
+Matrix uses 27 disjoint streams with delayed heads, random ASCII trails, and a
+permuted column resolve. Spotlights uses three bouncing integer paths, a
+precomputed squared-distance table, and a center convergence/expansion phase.
+Laseretch processes two non-space targets per tick with a diagonal beam and
+sparks; settled text survives overlay restoration. VHStape shifts a moving
+three-row wave, occasionally glitches an extra row, adds character snow, then
+redraws the original text. These are visual adaptations, not byte-for-byte
+ports of upstream scenes, color gradients, paths, timings, or RNG behavior.
+
+The direct renderer embeds the public-domain X.Org 6x13 bitmap font.
+See demo-font.h for its original copyright notice and source attribution.
+
+Fireworks launches 16-character shells every 12 steps, rises and bursts along
+16 integer radial directions, then returns those characters to their targets.
+Bouncyballs drops three characters every other step along their target columns,
+using a 40-step OutBounce curve. Both use a fixed 64-slot pool and retain settled
+text underneath overlapping particles. Expand uses a 180-step InOutQuart table
+and per-axis coordinate maps. Beams uses six row/column scan heads with sparse
+trail restoration, retaining illuminated text, followed by a diagonal wipe.
+Timings, particle limits, paths, and monochrome symbols are adapted to the SE/30.

@@ -1,0 +1,5 @@
+# The se30os test image with MAME's SE/30 driver rebuilt from 0.289 plus
+# pmmu-limits.patch: the 68030 MMU's root pointer and long-descriptor
+# limits are enforced, as on a real 68030.
+FROM se30-mame
+COPY se30 /usr/games/mame

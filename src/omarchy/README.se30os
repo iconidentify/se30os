@@ -1,0 +1,12 @@
+These are the omarchy68k screen savers, written for A/UX on the
+Macintosh SE/30: the ten 68k
+assembly engines (decrypt.s, storm.s, extras.s, motion.s), the glyph
+stamper (raster.s), the effect table (effects.c), the self-test
+(effects-test.c), the banner and the font. They are copied unchanged
+except for the banner's bottom line, which names se30os instead of
+A/UX 3.1.1. Their licences and attributions are in LICENSE, NOTICE and
+BRANDING-LICENSE.
+
+se30os runs them the way the A/UX direct demo did, stamping glyphs
+straight into video RAM; the driver is src/saver.c. compat/ holds the
+two libc headers the C files include.

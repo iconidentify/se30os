@@ -1,0 +1,8 @@
+# MAME plus what the networking tests need: a TAP interface to the
+# emulated Ethernet card, a telnet server, and some full-screen programs
+# to log in and run.
+FROM se30-mame
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    iproute2 inetutils-inetd inetutils-telnetd htop vim-nox less procps ncurses-term locales tcpdump \
+    && sed -i 's/# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen && locale-gen \
+    && rm -rf /var/lib/apt/lists/*

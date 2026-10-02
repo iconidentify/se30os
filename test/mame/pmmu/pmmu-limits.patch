@@ -1,0 +1,82 @@
+--- a/src/devices/cpu/m68000/m68kmmu.h
++++ b/src/devices/cpu/m68000/m68kmmu.h
+@@ -17,6 +17,7 @@
+ 
+ // MMU SR register fields
+ static constexpr u16 M68K_MMU_SR_BUS_ERROR       = 0x8000;
++static constexpr u16 M68K_MMU_SR_LIMIT           = 0x4000;
+ static constexpr u16 M68K_MMU_SR_SUPERVISOR_ONLY = 0x2000;
+ static constexpr u16 M68K_MMU_SR_WRITE_PROTECT   = 0x0800;
+ static constexpr u16 M68K_MMU_SR_INVALID         = 0x0400;
+@@ -395,8 +396,13 @@
+ 
+ template<bool ptest>
+ void pmmu_walk_tables(u32 addr_in, int type, u32 table, const int fc,
+-						const int limit, const bool rw, u32 &addr_out)
++						const int limit, const bool rw, u32 &addr_out, u32 tbl_limit)
+ {
++	// The limit that applies to the next table's index: the root pointer's,
++	// then each long-format table descriptor's. Short descriptors have none.
++	// Upper limit (L/U = 0): an index above it is a limit violation; lower
++	// limit (L/U = 1): an index below it is.
++	bool has_limit = true;
+ 	int level = 0;
+ 	u32 bits = m_mmu_tc & 0xffff;
+ 	const int pagesize = (m_mmu_tc >> 20) & 0xf;
+@@ -455,6 +461,20 @@
+ 				break;
+ 
+ 			case M68K_MMU_DF_DT_TABLE_4BYTE:   // valid 4 byte descriptors
++			case M68K_MMU_DF_DT_TABLE_8BYTE:
++				if (has_limit)
++				{
++					const u32 lim = (tbl_limit >> 16) & 0x7fff;
++					if ((tbl_limit & 0x80000000) ? (u32(table_index) < lim) : (u32(table_index) > lim))
++					{
++						MMULOG("PMMU: limit violation, index %x limit %08x PC=%x\n", table_index, tbl_limit, m_ppc);
++						m_mmu_tmp_sr |= M68K_MMU_SR_LIMIT | M68K_MMU_SR_INVALID;
++						resolved = 1;
++						break;
++					}
++				}
++				if (type == M68K_MMU_DF_DT_TABLE_8BYTE)
++					goto long_desc;
+ 				level++;
+ 				addr_out = table + (table_index << 2);
+ 				tbl_entry = m_program->read_dword(addr_out);
+@@ -471,6 +491,7 @@
+ 
+ 				MMULOG("SHORT DESC: %08x\n", tbl_entry);
+ 				table = tbl_entry & M68K_MMU_DF_ADDR_MASK;
++				has_limit = false;
+ 				if (!machine().side_effects_disabled())
+ 				{
+ 					update_sr<0>(type, tbl_entry, fc);
+@@ -481,7 +502,7 @@
+ 				}
+ 				break;
+ 
+-			case M68K_MMU_DF_DT_TABLE_8BYTE:   // valid 8 byte descriptors
++			long_desc:   // valid 8 byte descriptors
+ 				level++;
+ 				addr_out = table + (table_index << 3);
+ 				tbl_entry = m_program->read_dword(addr_out);
+@@ -500,6 +521,8 @@
+ 
+ 				MMULOG("LONG DESC: %08x %08x\n", tbl_entry, tbl_entry2);
+ 				table = tbl_entry2 & M68K_MMU_DF_ADDR_MASK;
++				tbl_limit = tbl_entry;
++				has_limit = true;
+ 				if (!machine().side_effects_disabled())
+ 				{
+ 					update_sr<1>(type, tbl_entry, fc);
+@@ -603,7 +626,8 @@
+ 		type = m_mmu_crp_limit & M68K_MMU_DF_DT;
+ 	}
+ 
+-	pmmu_walk_tables<ptest>(addr_in, type, tbl_addr, fc, limit, rw, addr_out);
++	pmmu_walk_tables<ptest>(addr_in, type, tbl_addr, fc, limit, rw, addr_out,
++			((m_mmu_tc & M68K_MMU_TC_SRE) && (fc & 4)) ? m_mmu_srp_limit : m_mmu_crp_limit);
+ 
+ 	if (ptest)
+ 	{
